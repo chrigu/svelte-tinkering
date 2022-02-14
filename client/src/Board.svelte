@@ -1,6 +1,6 @@
 <script>
 	import { openModal, closeModal, Modals } from 'svelte-modals';
-	import Modal from './Modal.svelte';
+	import FormModal from './FormModal.svelte';
 
 	import Column from './Column.svelte';
 	import Card from './Card.svelte';
@@ -14,22 +14,22 @@
 		{
 			id: 0,
 			name: 'Montag',
-			recipeId: -1
+			recipes: [] 
 		},
 		{
 			id: 1,
 			name: 'Dienstag',
-			recipeId: -1
+			recipes: [] 
 		},
 		{
 			id: 2,
 			name: 'Mittwoch',
-			recipeId: -1
+			recipes: [] 
 		},
 		{
 			id: 3,
 			name: 'Donnerstag',
-			recipeId: -1
+			recipes: [] 
 		}
 	];
 
@@ -41,7 +41,7 @@
 	};
 
 	const add = () =>
-		openModal(Modal, {
+		openModal(FormModal, {
 			title: 'Rezept hinzufügen',
 			message: 'This is an alert',
 			onSave: addRecipe
@@ -53,21 +53,18 @@
 		console.log(`Move ${recipeId} to ${columnId}`);
 
 		// remove
-		cookbook = cookbook.filter((recipe) => recipe != event.detail.recipeId);
-		days = days.map((day) => {
-			if (day.recipeId === event.detail.recipeId) {
-				day.recipeId = -1;
-			}
-			return day;
-		});
+		cookbook = cookbook.filter(recipe => recipe != recipeId);
+		days = days.map(day => Object.assign({}, day, {
+      recipes: day.recipes.filter(recipe => recipe != recipeId)
+    }));
 
-    console.log(recipeId, columnId)
-		if (columnId == -1) {
+		if (columnId === -1) {
 			cookbook = [...cookbook, recipeId];
 		} else {
 			for (let day of days) {
+        console.log(day)
 				if (day.id === columnId) {
-					day.recipeId = recipeId;
+          day.recipes = [...day.recipes, recipeId]
 				}
 			}
 		}
@@ -86,9 +83,9 @@
 	{#each days as day}
 		<Column id={day.id} on:recipePlaced={moveRecipe}>
 			{day.name}
-			{#if day.recipeId > -1}
-        <Card recipe={recipes.filter(recipe => recipe.id === day.recipeId)[0]} />
-			{/if}
+      {#each recipes.filter(recipe => day.recipes.indexOf(recipe.id) > -1) as recipe}
+			  <Card {recipe} />
+		  {/each}
 		</Column>
 	{/each}
 </div>
